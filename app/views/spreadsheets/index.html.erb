@@ -1,0 +1,71 @@
+<div class="row mb-4">
+  <div class="col">
+    <h1>My Spreadsheets</h1>
+  </div>
+  <div class="col text-end">
+    <%= link_to 'Upload New Spreadsheet', new_spreadsheet_path, class: 'btn btn-primary' %>
+  </div>
+</div>
+
+<% if @spreadsheets.any? %>
+  <div class="table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Filename</th>
+          <th>Upload Date</th>
+          <th>Status</th>
+          <th>Share Link</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @spreadsheets.each do |spreadsheet| %>
+          <tr>
+            <td><%= spreadsheet.original_filename %></td>
+            <td><%= spreadsheet.created_at.strftime('%B %d, %Y') %></td>
+            <td>
+              <% if spreadsheet.processing? %>
+                <span class="badge bg-warning">Processing Upload</span>
+              <% elsif spreadsheet.sharing? %>
+                <span class="badge bg-info">Generating Share Link</span>
+              <% else %>
+                <span class="badge bg-success">Ready</span>
+              <% end %>
+            </td>
+            <td>
+              <% if spreadsheet.share_link.present? %>
+                <div class="input-group">
+                  <input type="text" class="form-control form-control-sm" value="<%= spreadsheet.share_link %>" readonly>
+                  <button class="btn btn-outline-secondary btn-sm" type="button" onclick="navigator.clipboard.writeText('<%= spreadsheet.share_link %>')">
+                    Copy
+                  </button>
+                </div>
+              <% elsif spreadsheet.processing? %>
+                <span class="text-muted">Upload in progress...</span>
+              <% elsif spreadsheet.sharing? %>
+                <span class="text-muted">Generating share link...</span>
+              <% else %>
+                <span class="text-muted">Not shared yet</span>
+              <% end %>
+            </td>
+            <td>
+              <% if !spreadsheet.processing? && !spreadsheet.share_link.present? %>
+                <%= button_to 'Generate Share Link', 
+                            share_spreadsheet_path(spreadsheet), 
+                            method: :post, 
+                            class: 'btn btn-sm btn-outline-primary',
+                            data: { turbo_confirm: 'Are you sure? This will create a copy of your spreadsheet.' } %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+<% else %>
+  <div class="text-center my-5">
+    <p class="text-muted">No spreadsheets uploaded yet.</p>
+    <p><%= link_to 'Upload your first spreadsheet', new_spreadsheet_path, class: 'btn btn-primary' %></p>
+  </div>
+<% end %> 
